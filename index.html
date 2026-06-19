@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Интернет-гигиена 3.0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 0; background:#0f172a; color:#e5e7eb; }
+    header { padding: 16px; text-align:center; background:#020617; border-bottom:1px solid #1f2937; }
+    h1 { font-size: 20px; margin: 0 0 4px; }
+    .subtitle { font-size: 13px; color:#9ca3af; }
+    main { padding: 16px; max-width: 800px; margin: 0 auto 56px; }
+    .progress { margin: 12px 0 16px; font-size: 13px; color:#9ca3af; }
+    .progress-bar { width: 100%; height: 6px; background:#1f2937; border-radius:999px; overflow:hidden; }
+    .progress-bar-inner { height:100%; width:0%; background:linear-gradient(90deg,#22c55e,#a3e635); transition: width 0.3s ease; }
+    .card { background:#020617; border:1px solid #1f2937; border-radius:12px; padding:16px; margin-bottom:16px; }
+    .card h2 { font-size:17px; margin:0 0 8px; }
+    .card p { font-size:14px; margin:4px 0; color:#d1d5db; }
+    button { font-size:14px; border-radius:999px; border:none; padding:8px 14px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+    button.primary { background:#22c55e; color:#022c22; font-weight:600; }
+    button.secondary { background:#111827; color:#e5e7eb; border:1px solid #374151; }
+    button:disabled { opacity:0.4; cursor:default; }
+    .tabs { position:fixed; bottom:0; left:0; right:0; display:flex; border-top:1px solid #1f2937; background:#020617; }
+    .tab { flex:1; padding:8px 4px; text-align:center; font-size:11px; color:#6b7280; cursor:pointer; }
+    .tab span { display:block; }
+    .tab.active { color:#22c55e; font-weight:600; }
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#111827; font-size:11px; color:#9ca3af; margin-bottom:6px; }
+    .hint { font-size:13px; color:#9ca3af; margin-top:8px; }
+    .list-item { margin:6px 0; font-size:14px; }
+    .list-item input[type=checkbox] { margin-right:6px; }
+    .banner { border-radius:12px; border:1px solid #374151; padding:12px; background:#020617; margin:8px 0 12px; }
+    .banner-title { font-size:14px; font-weight:600; margin-bottom:6px; }
+    .cookies-options { margin-top:8px; }
+    .cookies-options label { display:flex; align-items:center; font-size:13px; margin:4px 0; }
+    .cookies-options input { margin-right:6px; }
+    .toast { position:fixed; top:12px; right:12px; background:#16a34a; color:#022c22; padding:8px 12px; border-radius:999px; font-size:13px; box-shadow:0 10px 30px rgba(0,0,0,0.4); opacity:0; transform:translateY(-10px); transition:all 0.25s ease; }
+    .toast.show { opacity:1; transform:translateY(0); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Интернет-гигиена 3.0</h1>
+    <div class="subtitle">3 мини-практики → персональный чек-лист</div>
+  </header>
+  <main>
+    <div class="progress">
+      Прогресс: <span id="progressText">0 / 3 разделов</span>
+      <div class="progress-bar"><div class="progress-bar-inner" id="progressBar"></div></div>
+    </div>
+
+    <!-- Раздел 1: Соглашения -->
+    <section id="screen-consent" class="screen">
+      <div class="card">
+        <span class="pill">Раздел 1</span>
+        <h2>Соглашения: найди красные флаги</h2>
+        <p>Это то самое «лицензионное соглашение», которое вы уже подписали. Отметьте пункты, которые кажутся вам опасными или странными.</p>
+        <div style="margin-top:8px; font-size:13px; background:#020617; border-radius:8px; border:1px solid #1f2937; padding:8px; max-height:220px; overflow:auto;">
+          <label class="list-item"><input type="checkbox" class="consent-flag" data-bad="false"> Мы обрабатываем ваши данные для оказания услуг и улучшения сервиса.</label>
+          <label class="list-item"><input type="checkbox" class="consent-flag" data-bad="true"> Вы обязуетесь отдать своё мобильное устройство после мастер-класса Даниила Забелина.</label>
+          <label class="list-item"><input type="checkbox" class="consent-flag" data-bad="true"> Вы передаёте нам бессрочные и безотзывные права на использование всех введённых вами данных.</label>
+          <label class="list-item"><input type="checkbox" class="consent-flag" data-bad="false"> Вы можете запросить удаление своих данных, если передумаете.</label>
+          <label class="list-item"><input type="checkbox" class="consent-flag" data-bad="true"> Мы вправе передавать ваши данные любым третьим лицам по нашему усмотрению.</label>
+        </div>
+        <button class="primary" id="btnCheckConsent">Проверить выбор</button>
+        <p class="hint" id="consentHint">Выберите хотя бы два пункта, которые вам не нравятся.</p>
+      </div>
+    </section>
+
+    <!-- Раздел 2: Cookies -->
+    <section id="screen-cookies" class="screen" style="display:none;">
+      <div class="card">
+        <span class="pill">Раздел 2</span>
+        <h2>Cookies: настроить, а не «Принять всё»</h2>
+        <p>Сначала посмотрите на баннер, как на обычном сайте. Потом нажмите «Настроить».</p>
+        <div class="banner">
+          <div class="banner-title">Мы используем файлы cookies</div>
+          <p style="font-size:13px; color:#d1d5db;">Мы применяем cookies для работы сайта, анализа трафика и показа персональной рекламы. Выберите, с чем согласны.</p>
+          <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+            <button class="secondary" id="btnAcceptAll">Принять всё</button>
+            <button class="secondary" id="btnDeclineAll">Отклонить</button>
+            <button class="primary" id="btnCustomize">Настроить</button>
+          </div>
+        </div>
+        <div id="cookiesSettings" style="display:none;">
+          <p class="hint">Технические cookies нужны, чтобы сайт вообще работал. Аналитические и рекламные можно отключить.</p>
+          <div class="cookies-options">
+            <label><input type="checkbox" checked disabled> Технические (обязательно)</label>
+            <label><input type="checkbox" id="ckAnalytics" checked> Аналитические (статистика и метрики)</label>
+            <label><input type="checkbox" id="ckAds" checked> Рекламные и персонализация</label>
+          </div>
+          <button class="primary" id="btnSaveCookies" style="margin-top:8px;">Сохранить настройки</button>
+        </div>
+        <p class="hint" id="cookiesHint">Подсказка: попробуйте отключить рекламные cookies.</p>
+      </div>
+    </section>
+
+    <!-- Раздел 3: Разрешения -->
+    <section id="screen-permissions" class="screen" style="display:none;">
+      <div class="card">
+        <span class="pill">Раздел 3</span>
+        <h2>Разрешения и аккаунты</h2>
+        <p>Сделайте мини-ревизию в одном реальном сервисе. Отмечайте шаги по мере выполнения.</p>
+        <label class="list-item"><input type="checkbox" class="perm-step" data-step="1"> Я выбрал(а) одно приложение/сервис, который часто использует мои данные.</label>
+        <label class="list-item"><input type="checkbox" class="perm-step" data-step="2"> Я открыл(а) его разрешения на телефоне (камера, микрофон, геолокация, контакты).</label>
+        <label class="list-item"><input type="checkbox" class="perm-step" data-step="3"> Я отключил(а) хотя бы один доступ, который кажется лишним.</label>
+        <label class="list-item"><input type="checkbox" class="perm-step" data-step="4"> Я проверил(а) привязанные устройства/приложения и отключил(а) хотя бы одно лишнее.</label>
+        <button class="primary" id="btnFinishPerms" style="margin-top:8px;">Засчитать раздел</button>
+        <p class="hint" id="permHint">Необязательно всё делать прямо сейчас, но попробуйте хотя бы один реальный шаг.</p>
+      </div>
+    </section>
+
+    <!-- Чек-лист -->
+    <section id="screen-checklist" class="screen" style="display:none;">
+      <div class="card" id="checklistLocked">
+        <span class="pill">Финал</span>
+        <h2>Чек-лист пока закрыт</h2>
+        <p>Чтобы открыть чек-лист интернет-гигиены, пройдите все 3 раздела. Это как игра: сначала квесты, потом — награда.</p>
+      </div>
+      <div class="card" id="checklistContent" style="display:none;">
+        <span class="pill">Финал</span>
+        <h2>Чек-лист интернет-гигиены</h2>
+        <p><strong>Соглашения</strong></p>
+        <ul style="font-size:14px; color:#d1d5db; padding-left:18px;">
+          <li>Перед тем как жать «Согласен», пролистай до ключевых пунктов.</li>
+          <li>Ищи формулировки про вечность, полный доступ, передачу третьим лицам.</li>
+          <li>Помни: по 152-ФЗ ты можешь не соглашаться и отзывать согласие.</li>
+        </ul>
+        <p><strong>Cookies</strong></p>
+        <ul style="font-size:14px; color:#d1d5db; padding-left:18px;">
+          <li>Не нажимай автоматически «Принять всё».</li>
+          <li>Если есть «Настроить» — зайди туда и выключи лишнее.</li>
+          <li>Оставляй включёнными только технические cookies, остальное — по необходимости.</li>
+        </ul>
+        <p><strong>Разрешения и аккаунты</strong></p>
+        <ul style="font-size:14px; color:#d1d5db; padding-left:18px;">
+          <li>Раз в месяц проверяй разрешения у приложений.</li>
+          <li>Отключай доступы, которыми не пользуешься (гео, камера, микрофон).</li>
+          <li>Убирай старые устройства и интеграции из аккаунтов.</li>
+        </ul>
+        <p class="hint">Выбери одну вещь, которую сделаешь сегодня до конца дня, и запиши её себе в заметки.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Навигация -->
+  <div class="tabs">
+    <div class="tab active" data-target="screen-consent"><span>Соглашения</span></div>
+    <div class="tab" data-target="screen-cookies"><span>Cookies</span></div>
+    <div class="tab" data-target="screen-permissions"><span>Разрешения</span></div>
+    <div class="tab" data-target="screen-checklist"><span>Чек-лист</span></div>
+  </div>
+
+  <div class="toast" id="toast">Раздел засчитан</div>
+
+  <script>
+    const state = {
+      consentDone: false,
+      cookiesDone: false,
+      permissionsDone: false
+    };
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem('netHygieneState');
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        Object.assign(state, saved);
+      } catch (e) {}
+    }
+
+    function saveState() {
+      localStorage.setItem('netHygieneState', JSON.stringify(state));
+    }
+
+    function updateProgress() {
+      const done = [state.consentDone, state.cookiesDone, state.permissionsDone].filter(Boolean).length;
+      document.getElementById('progressText').textContent = done + ' / 3 разделов';
+      document.getElementById('progressBar').style.width = (done / 3 * 100) + '%';
+
+      const locked = document.getElementById('checklistLocked');
+      const content = document.getElementById('checklistContent');
+      if (done === 3) {
+        locked.style.display = 'none';
+        content.style.display = 'block';
+      } else {
+        locked.style.display = 'block';
+        content.style.display = 'none';
+      }
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    function switchScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+      document.getElementById(id).style.display = 'block';
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.target === id);
+      });
+    }
+
+    // Init
+    loadState();
+    updateProgress();
+
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        switchScreen(tab.dataset.target);
+      });
+    });
+
+    // Consent logic
+    document.getElementById('btnCheckConsent').addEventListener('click', () => {
+      const flags = Array.from(document.querySelectorAll('.consent-flag'));
+      const selected = flags.filter(f => f.checked);
+      if (selected.length < 2) {
+        document.getElementById('consentHint').textContent = 'Отметьте хотя бы два пункта, которые кажутся вам рискованными.';
+        return;
+      }
+      const badSelected = selected.filter(f => f.dataset.bad === 'true');
+      if (badSelected.length === 0) {
+        document.getElementById('consentHint').textContent = 'Подсказка: особенно опасны вечные обязательства, передача прав и обещание отдать устройство.';
+        return;
+      }
+      state.consentDone = true;
+      saveState();
+      updateProgress();
+      document.getElementById('consentHint').textContent = 'Отлично! Вы нашли ключевые красные флаги. Раздел засчитан.';
+      showToast('Раздел 1 завершён');
+    });
+
+    // Cookies logic
+    const cookiesSettings = document.getElementById('cookiesSettings');
+    document.getElementById('btnCustomize').addEventListener('click', () => {
+      cookiesSettings.style.display = 'block';
+      document.getElementById('cookiesHint').textContent = 'Снимите лишние галочки. Рекламные cookies почти всегда не обязательны.';
+    });
+
+    document.getElementById('btnAcceptAll').addEventListener('click', () => {
+      document.getElementById('cookiesHint').textContent = 'Так делает большинство. Но попробуйте нажать «Настроить» и выбрать только нужное.';
+    });
+    document.getElementById('btnDeclineAll').addEventListener('click', () => {
+      document.getElementById('cookiesHint').textContent = 'Полный отказ не всегда работает. Обычно нужны хотя бы технические cookies.';
+    });
+
+    document.getElementById('btnSaveCookies').addEventListener('click', () => {
+      const ads = document.getElementById('ckAds').checked;
+      if (ads) {
+        document.getElementById('cookiesHint').textContent = 'Попробуйте отключить рекламные cookies и сохранить ещё раз.';
+        return;
+      }
+      state.cookiesDone = true;
+      saveState();
+      updateProgress();
+      document.getElementById('cookiesHint').textContent = 'Супер! Вы настроили cookies под себя. Раздел засчитан.';
+      showToast('Раздел 2 завершён');
+    });
+
+    // Permissions logic
+    document.getElementById('btnFinishPerms').addEventListener('click', () => {
+      const steps = Array.from(document.querySelectorAll('.perm-step'));
+      const checkedCount = steps.filter(s => s.checked).length;
+      if (checkedCount < 1) {
+        document.getElementById('permHint').textContent = 'Отметьте хотя бы один шаг, который вы сделали или сделаете сегодня.';
+        return;
+      }
+      state.permissionsDone = true;
+      saveState();
+      updateProgress();
+      document.getElementById('permHint').textContent = 'Отлично! Главное — начать ревизию разрешений. Раздел засчитан.';
+      showToast('Раздел 3 завершён');
+    });
+  </script>
+</body>
+</html>
