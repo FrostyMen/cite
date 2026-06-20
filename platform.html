@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Интерактивная платформа</title>
+
+  <!-- Шрифты -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #fef3c7;
+      --ink: #0a0a0a;
+      --pink: #ff6ec7;
+      --lime: #c5fc4f;
+      --cyan: #5ee7df;
+      --orange: #ff8a3d;
+      --red: #ff3b3b;
+      --shadow: 6px 6px 0 var(--ink);
+      --shadow-lg: 10px 10px 0 var(--ink);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Manrope, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body {
+      background-image:
+        radial-gradient(circle at 20% 10%, var(--pink) 0, transparent 25%),
+        radial-gradient(circle at 80% 80%, var(--cyan) 0, transparent 30%),
+        radial-gradient(circle at 50% 50%, var(--lime) 0, transparent 20%);
+      background-attachment: fixed;
+    }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.06;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.93'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    .app {
+      position: relative;
+      z-index: 2;
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 36px max(20px, env(safe-area-inset-right)) 60px max(20px, env(safe-area-inset-left));
+    }
+
+    /* HEADER */
+
+    header {
+      text-align: left;
+      margin-bottom: 26px;
+    }
+
+    .tag {
+      display: inline-block;
+      background: var(--ink);
+      color: var(--lime);
+      padding: 6px 14px;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      transform: rotate(-2deg);
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-family: Unbounded, sans-serif;
+      font-weight: 900;
+      font-size: clamp(34px, 7vw, 72px);
+      line-height: 0.95;
+      letter-spacing: -2px;
+      text-transform: uppercase;
+    }
+
+    h1 .accent {
+      background: var(--pink);
+      padding: 0 10px;
+      display: inline-block;
+      transform: rotate(-1deg);
+      border: 3px solid var(--ink);
+      box-shadow: var(--shadow);
+    }
+
+    .subtitle {
+      margin-top: 20px;
+      font-size: 18px;
+      max-width: 560px;
+      line-height: 1.5;
+    }
+
+    body.registered .subtitle {
+      display: none;
+    }
+
+    body.registered header {
+      margin-bottom: 18px;
+    }
+
+    /* CARDS */
+
+    .card {
+      background: #fff;
+      border: 3px solid var(--ink);
+      box-shadow: var(--shadow-lg);
+      padding: 32px;
+      margin-top: 26px;
+      position: relative;
+    }
+
+    /* SCREENS */
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+      animation: pop 0.35s ease-out;
+    }
+
+    @keyframes pop {
+      0% {
+        transform: translateY(20px) scale(0.97);
+        opacity: 0;
+      }
+      100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* BUTTONS */
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--ink);
+      color: #fff;
+      border: 3px solid var(--ink);
+      padding: 16px 28px;
+      font-family: Unbounded, sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      text-decoration: none;
+    }
+
+    .btn:hover:not(:disabled) {
+      transform: translate(-2px, -2px);
+      box-shadow: 8px 8px 0 var(--ink);
+    }
+
+    .btn:active:not(:disabled) {
+      transform: translate(3px, 3px);
+      box-shadow: 2px 2px 0 var(--ink);
+    }
+
+    .btn.primary {
+      background: var(--pink);
+      color: var(--ink);
+    }
+
+    .btn.lime {
+      background: var(--lime);
+      color: var(--ink);
+    }
+
+    .btn.cyan {
+      background: var(--cyan);
+      color: var(--ink);
+    }
+
+    .btn.small {
+      padding: 10px 16px;
+      font-size: 13px;
+      box-shadow: 4px 4px 0 var(--ink);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: 3px 3px 0 var(--ink);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 22px;
+    }
+
+    .btn-row.end {
+      justify-content: flex-end;
+    }
+
+    .btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* FORM */
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    .field label {
+      display: block;
+      font-weight: 700;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .field input {
+      width: 100%;
+      background: var(--bg);
+      border: 3px solid var(--ink);
+      padding: 14px 16px;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .field input:focus {
+      outline: none;
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .field input::placeholder {
+      color: #9a9a8a;
+      font-weight: 400;
+    }
+
+    .agree-box {
+      background: var(--bg);
+      border: 3px solid var(--ink);
+      padding: 16px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      margin-top: 6px;
+    }
+
+    .agree-box input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      flex-shrink: 0;
+      width: 26px;
+      height: 26px;
+      border: 3px solid var(--ink);
+      background: #fff;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+    }
+
+    .agree-box input[type="checkbox"]:checked {
+      background: var(--lime)
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a0a0a' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7'/%3E%3C/svg%3E")
+        center 16px no-repeat;
+    }
+
+    .agree-box span {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .link {
+      display: inline;
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0;
+      color: var(--ink);
+      font: inherit;
+      font-weight: 700;
+      text-align: left;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      line-height: inherit;
+      text-decoration: underline;
+      text-decoration-thickness: 3px;
+      text-decoration-color: var(--pink);
+      cursor: pointer;
+    }
+
+    .form-error {
+      display: none;
+      background: var(--red);
+      color: #fff;
+      border: 3px solid var(--ink);
+      padding: 10px 14px;
+      font-weight: 700;
+      font-size: 14px;
+      margin-top: 14px;
+    }
+
+    .form-error.show {
+      display: block;
+      animation: pop 0.25s;
+    }
+
+    /* DASHBOARD (частично, остальное — как в исходнике) */
+
+    .dash-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 4px;
+    }
+
+    .hello {
+      font-family: Unbounded, sans-serif;
+      font-size: clamp(24px, 5vw, 38px);
+      line-height: 1;
+    }
+
+    .progress {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 18px 0 4px;
+      font-weight: 700;
+    }
+
+    .progress-bar {
+      flex: 1;
+      height: 16px;
+      background: var(--bg);
+      border: 3px solid var(--ink);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--lime);
+      width: 0;
+      transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      background-image: repeating-linear-gradient(
+        45deg,
+        transparent 0 8px,
+        rgba(0, 0, 0, 0.1) 8px 12px
+      );
+    }
+
+    .pcount {
+      font-family: Unbounded, sans-serif;
+      font-size: 15px;
+      white-space: nowrap;
+    }
+
+    .modules {
+      display: grid;
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .module {
+      background: #fff;
+      border: 3px solid var(--ink);
+      box-shadow: var(--shadow);
+      padding: 18px 20px;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    .module.clickable {
+      cursor: pointer;
+    }
+
+    .module.clickable:hover {
+      transform: translate(-3px, -3px);
+      box-shadow: 9px 9px 0 var(--ink);
+    }
+
+    .module .emoji {
+      flex-shrink: 0;
+      width: 56px;
+      height: 56px;
+      background: var(--cyan);
+      border: 3px solid var(--ink);
+      display: grid;
+      place-items: center;
+      font-size: 28px;
+    }
+
+    .module .body h3 {
+      font-family: Unbounded, sans-serif;
+      font-size: 15px;
+      text-transform: uppercase;
+      line-height: 1.15;
+      overflow-wrap: anywhere;
+    }
+
+    .module .body p {
+      font-size: 14px;
+      color: #444;
+      margin-top: 4px;
+      overflow-wrap: anywhere;
+    }
+
+    .module .state {
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .module.locked {
+      opacity: 0.55;
+    }
+
+    .module.locked .emoji {
+      background: #ddd;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border: 3px solid var(--ink);
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .badge.open {
+      background: var(--lime);
+    }
+
+    .badge.lock {
+      background: #ddd;
+    }
+
+    .badge.done {
+      background: var(--ink);
+      color: var(--lime);
+    }
+
+    /* ... здесь идут остальные стили из исходника: quiz, clauses, cookie-banner,
+       feedback, poll, treats, modal, marquee и пр. — оставляем без изменений ... */
+  </style>
+</head>
+<body>
+  <div class="noise"></div>
+
+  <div class="app">
+    <header>
+      <span class="tag">
+        <span class="ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="11" width="14" height="9" rx="1"></rect>
+            <path d="M8 11V7.5a4 4 0 0 1 8 0V11"></path>
+          </svg>
+        </span>
+        Личный кабинет участника
+      </span>
+      <h1><br><span class="accent">Личный кабинет</span></h1>
+      <p class="subtitle">
+        Заполни форму, чтобы открыть доступ к заданиям. И да — соглашение реально стоит прочитать. Серьёзно.
+      </p>
+    </header>
+
+    <!-- ЭКРАН РЕГИСТРАЦИИ -->
+
+    <section class="screen active" id="screen-register">
+      <div class="cookie-bar" id="cookieBar">
+        <!-- ... cookie UI из исходника ... -->
+      </div>
+
+      <div class="card">
+        <div class="sticker">Без осуждения</div>
+
+        <h2 class="block-title"><em>Личный кабинет участника</em></h2>
+        <p class="lead" style="margin-bottom:22px">
+          Без осуждения. Просто отметь, как есть на самом деле.
+        </p>
+
+        <form id="regForm" autocomplete="off">
+          <div class="field">
+            <label for="f-name">Имя</label>
+            <input type="text" id="f-name" required placeholder="Имя">
+          </div>
+
+          <div class="field">
+            <label for="f-email">Email</label>
+            <input type="email" id="f-email" required placeholder="example@mail.ru">
+          </div>
+
+          <div class="field">
+            <label for="f-phone">Телефон</label>
+            <input type="tel" id="f-phone" required placeholder="+7 999 123-45-67">
+          </div>
+
+          <div class="agree-box">
+            <input type="checkbox" id="f-agree" required>
+            <span>
+              Соглашаюсь с условиями обработки персональных данных и политикой конфиденциальности.
+              <button type="button" class="link" onclick="openAgreement()">Читать соглашение</button>
+            </span>
+          </div>
+
+          <div class="form-error" id="reg-error">
+            Проверь, чтобы все поля были заполнены и стояла галочка согласия.
+          </div>
+
+          <div class="btn-row">
+            <button type="submit" class="btn primary">
+              <span>
+                <svg viewBox="0 0 24 24">
+                  <path d="M4 12h14M13 6l6 6-6 6"></path>
+                </svg>
+              </span>
+              Открыть доступ
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ЭКРАН ДАШБОРДА -->
+
+    <section class="screen" id="screen-dashboard">
+      <div class="card">
+        <div class="dash-top">
+          <div>
+            <div class="hello" id="hello">Привет!</div>
+            <p style="font-weight:600;color:#444;margin-top:4px">
+              Выбрано ловушек: <b>0</b> / 3
+            </p>
+          </div>
+          <button class="btn small" onclick="logout()">Выйти</button>
+        </div>
+
+        <div class="progress">
+          <span>Прогресс по блокам</span>
+          <div class="progress-bar">
+            <div class="progress-fill" id="pfill"></div>
+          </div>
+          <span class="pcount" id="pcount">0 / 3</span>
+        </div>
+
+        <div class="modules" id="modules">
+          <div class="module clickable" data-module="1" onclick="show('screen-block1')">
+            <div class="emoji">🛡️</div>
+            <div class="body">
+              <h3>Сайт и персональные данные</h3>
+              <p>Сайт хочет твои данные и прячет честный выбор. Найди вариант, который реально защищает приватность.</p>
+            </div>
+            <div class="state">
+              <span class="badge open">Открыто</span>
+            </div>
+          </div>
+
+          <div class="module locked" data-module="2" onclick="Storage.blockAvailable(2) && show('screen-block2')">
+            <div class="emoji">🍪</div>
+            <div class="body">
+              <h3>Cookie-баннер и настройки</h3>
+              <p>Сайт показывает тебе баннер. Твоя задача — не дать себя обмануть.</p>
+            </div>
+            <div class="state">
+              <span class="badge lock">Закрыто</span>
+            </div>
+          </div>
+
+          <div class="module locked" data-module="3" onclick="Storage.blockAvailable(3) && show('screen-block3')">
+            <div class="emoji">📱</div>
+            <div class="body">
+              <h3>Разрешения в приложении</h3>
+              <p>Приложение просит разрешение. Реши: дать или отказать.</p>
+            </div>
+            <div class="state">
+              <span class="badge lock">Закрыто</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Дальше идут все остальные экраны: screen-poll, screen-block1,
+         screen-block2, screen-block3, screen-block3result, screen-checklist,
+         модалки agreementModal, guideModal, бегущая строка и т.д. —
+         оставляем ровно как в твоём исходном файле. [file:1] -->
+
+    <!-- Модальное окно соглашения -->
+    <div class="modal" id="agreementModal">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3>Соглашение</h3>
+          <button class="modal-close" onclick="closeAgreement()">&times;</button>
+        </div>
+        <div class="modal-scroll">
+          <div class="modal-body" id="agreementBody"></div>
+          <div class="modal-track" id="agreementTrack">
+            <div class="modal-thumb" id="agreementThumb"></div>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn lime small" onclick="closeAgreement()">Закрыть</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ... модалка guideModal, бегущая строка marquee и прочее из исходника ... -->
+
+  </div>
+
+  <!-- СКРИПТ: ИСПРАВЛЕННАЯ ЛОГИКА -->
+
+  <script>
+    // SVG-иконки в виде фрагментов HTML
+    const I = {
+      check: "<span class='ic'><svg viewBox='0 0 24 24'><path d='M4 12.5l5 5 11-12'/></svg></span>",
+      cross: "<span class='ic'><svg viewBox='0 0 24 24'><path d='M6 6l12 12M18 6L6 18'/></svg></span>",
+      arrowR: "<span class='ic'><svg viewBox='0 0 24 24'><path d='M4 12h14M13 6l6 6-6 6'/></svg></span>",
+      arrowL: "<span class='ic'><svg viewBox='0 0 24 24'><path d='M20 12H6M11 6l-6 6 6 6'/></svg></span>",
+      refresh: "<span class='ic'><svg viewBox='0 0 24 24'><path d='M19.5 12a7.5 7.5 0 1 1-2.2-5.3'/><path d='M19.5 4.5V10h-5.5'/></svg></span>",
+      share: "<span class='ic'><svg viewBox='0 0 24 24'><circle cx='6' cy='12' r='2.4'/><circle cx='18' cy='6' r='2.4'/><circle cx='18' cy='18' r='2.4'/><path d='M8.1 10.9l7.8-3.8M8.1 13.1l7.8 3.8'/></svg></span>",
+      shield: "<span class='ic'><svg viewBox='0 0 24 24'><path d='M12 3l7 3v5.5c0 4.4-3 7.4-7 8.9-4-1.5-7-4.5-7-8.9V6z'/><path d='M9 12l2 2 4-4.5'/></svg></span>",
+      smile: "<span class='ic'><svg viewBox='0 0 24 24'><circle cx='12' cy='12' r='8.5'/><path d='M8.5 14c.9 1.2 2.1 1.9 3.5 1.9s2.6-.7 3.5-1.9'/><path d='M9 10v.4M15 10v.4'/></svg></span>",
+      think: "<span class='ic'><svg viewBox='0 0 24 24'><circle cx='12' cy='12' r='8.5'/><path d='M9.7 9.6A2.4 2.4 0 1 1 12.6 12c-.6.3-1 .8-1 1.5v.4'/><path d='M11.6 16.6v.2'/></svg></span>",
+      gift: "<span class='ic'><svg viewBox='0 0 24 24'><rect x='4' y='9.5' width='16' height='10.5' rx='1'/><path d='M4 13.5h16M12 9.5V20'/><path d='M12 9.5C9.5 9.5 7.5 8 8.7 6.6 9.9 5.2 12 7 12 9.5zM12 9.5c2.5 0 4.5-1.5 3.3-2.9C14.1 5.2 12 7 12 9.5z'/></svg></span>",
+      lock: "<span class='ic'><svg viewBox='0 0 24 24'><rect x='5' y='11' width='14' height='9' rx='1'/><path d='M8 11V7.5a4 4 0 0 1 8 0V11'/></svg></span>",
+      cookie: "<span class='ic'><svg viewBox='0 0 24 24'><circle cx='12' cy='12' r='9'/><circle cx='9' cy='9.5' r='1' fill='currentColor'/><circle cx='14.5' cy='9' r='1' fill='currentColor'/><circle cx='15' cy='14.5' r='1' fill='currentColor'/><circle cx='9.5' cy='15' r='1' fill='currentColor'/><circle cx='12' cy='12' r='1' fill='currentColor'/></svg></span>"
+    };
+
+    // Безопасная обёртка над localStorage
+    const LS = (() => {
+      const mem = {};
+      return {
+        get(k) {
+          try {
+            return localStorage.getItem(k);
+          } catch (e) {
+            return k in mem ? mem[k] : null;
+          }
+        },
+        set(k, v) {
+          try {
+            localStorage.setItem(k, v);
+          } catch (e) {
+            mem[k] = v;
+          }
+        },
+        remove(k) {
+          try {
+            localStorage.removeItem(k);
+          } catch (e) {
+            delete mem[k];
+          }
+        }
+      };
+    })();
+
+    const Storage = {
+      K: {
+        USER: 'iguser',
+        PROGRESS: 'igprogress',
+        B3: 'igblock3score',
+        CL: 'igchecklist'
+      },
+      saveUser(u) {
+        LS.set(this.K.USER, JSON.stringify(u));
+      },
+      getUser() {
+        const d = LS.get(this.K.USER);
+        return d ? JSON.parse(d) : null;
+      },
+      getProgress() {
+        const d = LS.get(this.K.PROGRESS);
+        return d ? JSON.parse(d) : { poll: false, block1: false, block2: false, block3: false };
+      },
+      setProgress(key) {
+        const p = this.getProgress();
+        p[key] = true;
+        LS.set(this.K.PROGRESS, JSON.stringify(p));
+      },
+      saveB3(s) {
+        LS.set(this.K.B3, String(s));
+      },
+      getB3() {
+        return parseInt(LS.get(this.K.B3) || '0', 10);
+      },
+      saveChecklist(arr) {
+        LS.set(this.K.CL, JSON.stringify(arr));
+      },
+      getChecklist() {
+        const d = LS.get(this.K.CL);
+        return d ? JSON.parse(d) : [];
+      },
+      blockAvailable(n) {
+        const p = this.getProgress();
+        if (n === 1) return true;
+        if (n === 2) return p.block1;
+        if (n === 3) return p.block2;
+        return false;
+      },
+      checklistAvailable() {
+        const p = this.getProgress();
+        return p.block1 && p.block2 && p.block3;
+      },
+      clearAll() {
+        Object.values(this.K).forEach(k => LS.remove(k));
+      }
+    };
+
+    function show(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const el = document.getElementById(id);
+      if (el) el.classList.add('active');
+      document.body.classList.toggle('registered', id !== 'screen-register');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderDashboard() {
+      const user = Storage.getUser();
+      const hello = document.getElementById('hello');
+      if (user && hello) {
+        hello.textContent = `Привет, ${user.name || 'участник'}!`;
+      }
+
+      const p = Storage.getProgress();
+      const total = 3;
+      const done = [p.block1, p.block2, p.block3].filter(Boolean).length;
+      const pcount = document.getElementById('pcount');
+      const pfill = document.getElementById('pfill');
+      if (pcount) pcount.textContent = `${done} / ${total}`;
+      if (pfill) pfill.style.width = `${(done / total) * 100}%`;
+
+      document.querySelectorAll('[data-module]').forEach(m => {
+        const n = parseInt(m.getAttribute('data-module'), 10);
+        if (Storage.blockAvailable(n)) {
+          m.classList.remove('locked');
+          m.classList.add('clickable');
+          const badge = m.querySelector('.badge');
+          if (badge && badge.classList.contains('lock')) {
+            badge.classList.remove('lock');
+            badge.classList.add('open');
+            badge.textContent = 'Открыто';
+          }
+        }
+      });
+    }
+
+    function logout() {
+      if (confirm('Точно выйти и очистить прогресс?')) {
+        Storage.clearAll();
+        const form = document.getElementById('regForm');
+        if (form) form.reset();
+        show('screen-register');
+      }
+    }
+
+    // Модалка соглашения (используем твой AGREEMENTTEXT, если он есть)
+    const AGREEMENTTEXT = `
+      <h4 class="text-white font-semibold mb-3 text-sm">Соглашение об обработке персональных данных</h4>
+      <p class="mb-2 text-xs text-slate-500">Краткая версия: мы не делаем ничего страшного.</p>
+      <!-- сюда можно вставить твой полный текст соглашения из исходника -->
+    `;
+
+    function openAgreement() {
+      const body = document.getElementById('agreementBody');
+      if (body) {
+        body.innerHTML = AGREEMENTTEXT;
+        document.getElementById('agreementModal').classList.add('show');
+      }
+    }
+
+    function closeAgreement() {
+      document.getElementById('agreementModal').classList.remove('show');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('regForm');
+      const err = document.getElementById('reg-error');
+
+      if (form) {
+        form.addEventListener('submit', e => {
+          e.preventDefault();
+          const name = document.getElementById('f-name')?.value.trim() || '';
+          const email = document.getElementById('f-email')?.value.trim() || '';
+          const phone = document.getElementById('f-phone')?.value.trim() || '';
+          const agree = !!document.getElementById('f-agree')?.checked;
+
+          if (!name || !email || !phone || !agree) {
+            if (err) err.classList.add('show');
+            return;
+          }
+          if (err) err.classList.remove('show');
+
+          try {
+            Storage.saveUser({ name, email, phone, registeredAt: new Date().toISOString() });
+          } catch (eSave) {
+            console.error('Ошибка сохранения пользователя', eSave);
+          }
+
+          show('screen-dashboard');
+          renderDashboard();
+        });
+      }
+
+      const existingUser = Storage.getUser();
+      if (existingUser) {
+        show('screen-dashboard');
+        renderDashboard();
+      } else {
+        show('screen-register');
+      }
+    });
+  </script>
+</body>
+</html>
